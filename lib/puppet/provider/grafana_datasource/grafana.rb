@@ -39,17 +39,22 @@ Puppet::Type.type(:grafana_datasource).provide(:grafana, parent: Puppet::Provide
         datasource = JSON.parse(response.body)
 
         {
-          id: datasource['id'],
-          name: datasource['name'],
-          url: datasource['url'],
-          type: datasource['type'],
-          user: datasource['user'],
-          password: datasource['password'],
-          database: datasource['database'],
-          access_mode: datasource['access'],
-          is_default: datasource['isDefault'] ? :true : :false,
-          json_data: datasource['jsonData']
-        }
+          :id => datasource["id"],
+          :name => datasource["name"],
+          :org_id => datasource["orgId"],
+          :url => datasource["url"],
+          :type => datasource["type"],
+          :user => datasource["user"],
+          :password => datasource["password"],
+          :database => datasource["database"],
+          :access_mode => datasource["access"],
+          :is_default => datasource["isDefault"] ? :true : :false,
+          :with_credentials => datasource["withCredentials"] ? :true : :false,
+          :basic_auth => datasource["basicAuth"] ? :true : :false,
+          :basic_auth_user => datasource["basicAuthUser"],
+          :basic_auth_password => datasource["basicAuthPassword"],
+          :json_data => datasource["jsonData"],
+        }      
       end
     rescue JSON::ParserError
       raise format('Fail to parse response: %s', response.body)
@@ -72,6 +77,15 @@ Puppet::Type.type(:grafana_datasource).provide(:grafana, parent: Puppet::Provide
   def type=(value)
     resource[:type] = value
     save_datasource
+  end
+
+  def org_id
+    self.datasource[:org_id]
+  end
+
+  def org_id=(value)
+    resource[:org_id] = value
+    self.save_datasource()
   end
 
   def url
@@ -130,6 +144,42 @@ Puppet::Type.type(:grafana_datasource).provide(:grafana, parent: Puppet::Provide
   end
   # rubocop:enable Style/PredicateName
 
+  def basic_auth
+    self.datasource[:basic_auth]
+  end
+
+  def basic_auth=(value)
+    resource[:basic_auth] = value
+    self.save_datasource()
+  end
+
+  def basic_auth_user
+    self.datasource[:basic_auth_user]
+  end
+
+  def basic_auth_user=(value)
+    resource[:basic_auth_user] = value
+    self.save_datasource()
+  end
+
+  def basic_auth_password
+    self.datasource[:basic_auth_password]
+  end
+
+  def basic_auth_password=(value)
+    resource[:basic_auth_password] = value
+    self.save_datasource()
+  end
+
+  def with_credentials
+    self.datasource[:is_default]
+  end
+
+  def with_credentials=(value)
+    resource[:with_credentials] = value
+    self.save_datasource()
+  end
+
   def json_data
     datasource[:json_data]
   end
@@ -141,16 +191,24 @@ Puppet::Type.type(:grafana_datasource).provide(:grafana, parent: Puppet::Provide
 
   def save_datasource
     data = {
-      name: resource[:name],
-      type: resource[:type],
-      url: resource[:url],
-      access: resource[:access_mode],
-      database: resource[:database],
-      user: resource[:user],
-      password: resource[:password],
-      isDefault: (resource[:is_default] == :true),
-      jsonData: resource[:json_data]
+      :name resource[:name],
+      :orgId resource[:org_id],
+      :type resource[:type],
+      :url resource[:url],
+      :access resource[:access_mode],
+      :database resource[:database],
+      :user resource[:user],
+      :password resource[:password],
+      :isDefault (resource[:is_default] == :true),
+      :withCredentials (resource[:with_credentials] == :true),
+      :jsonData resource[:json_data],
     }
+
+    if resource[:basic_auth]
+      data[:basicAuth] = resource[:basic_auth]
+      data[:basicAuthUser] = resource[:basic_auth_user]
+      data[:basicAuthPassword = resource[:basic_auth_password]
+    end
 
     if datasource.nil?
       response = send_request('POST', '/api/datasources', data)
