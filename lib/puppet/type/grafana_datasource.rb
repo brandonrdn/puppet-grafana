@@ -55,75 +55,75 @@ Puppet::Type.newtype(:grafana_datasource) do
     newvalues(:influxdb, :elasticsearch, :graphite, :kairosdb, :opentsdb, :prometheus)
   end
 
-  newproperty(:orgid) do
-    desc "The organization to create the datasource on"
-    defaultto 1
+  newparam(:org_name) do
+    desc "The organization name to create the datasource on"
+    defaultto "Main Org."
+  end
+
+  newparam(:organization_id) do
+  end
+  
+  newparam(:organization_name) do
+  end
+
+  newproperty(:user) do
+    desc "The username for the datasource"
+    defaultto ""
+  end
+
+  newproperty(:password) do
+    desc "The password for the datasource"
+    defaultto ""
+  end
+
+  newproperty(:database) do
+    desc "The name of the database (index)"
+    defaultto ""
+  end
+
+  newproperty(:access_mode) do
+    desc "Whether the datasource is accessed directly or not by the clients"
+    newvalues(:direct, :proxy)
+    defaultto :direct
+  end
+
+  newproperty(:is_default) do
+    desc "Whether the datasource is the default one"
+    newvalues(:true, :false)
+    defaultto :false
+  end
+
+  newproperty(:basic_auth) do
+    desc "Whether basic auth is enabled or not"
+    newvalues(:true, :false)
+    defaultto :false
+  end
+
+  newproperty(:basic_auth_user) do
+    desc "The username for basic auth if enabled"
+  end
+
+  newproperty(:basic_auth_password) do
+    desc "The password for basic auth if enabled"
+  end
+
+  newproperty(:with_credentials) do
+    desc "Whether credentials such as cookies or auth headers should be sent with cross-site requests"
+    newvalues(:true, :false)
+    defaultto :false
+  end
+
+  newproperty(:json_data) do
+    desc "Additional JSON data to configure the datasource (optional)"
 
     validate do |value|
-      unless value =~ /^\d+$/
-        raise ArgumentError, "%s is not a valid orgID" % value
+      unless value.nil? or value.is_a?(Hash) then
+        raise ArgumentError , "json_data should be a Hash!"
       end
     end
   end
 
-    newproperty(:user) do
-      desc "The username for the datasource"
-      defaultto ""
-    end
-
-    newproperty(:password) do
-      desc "The password for the datasource"
-      defaultto ""
-    end
-
-    newproperty(:database) do
-      desc "The name of the database (index)"
-      defaultto ""
-    end
-
-    newproperty(:access_mode) do
-      desc "Whether the datasource is accessed directly or not by the clients"
-      newvalues(:direct, :proxy)
-      defaultto :direct
-    end
-
-    newproperty(:is_default) do
-      desc "Whether the datasource is the default one"
-      newvalues(:true, :false)
-      defaultto :false
-    end
-
-    newproperty(:basic_auth) do
-      desc "Whether basic auth is enabled or not"
-      newvalues(:true, :false)
-      defaultto :false
-    end
-
-    newproperty(:basic_auth_user) do
-      desc "The username for basic auth if enabled"
-    end
-
-    newproperty(:basic_auth_password) do
-      desc "The password for basic auth if enabled"
-    end
-
-    newproperty(:with_credentials) do
-      desc "Whether credentials such as cookies or auth headers should be sent with cross-site requests"
-      newvalues(:true, :false)
-      defaultto :false
-    end
-
-    newproperty(:json_data) do
-      desc "Additional JSON data to configure the datasource (optional)"
-
-      validate do |value|
-        unless value.nil? or value.is_a?(Hash) then
-          raise ArgumentError , "json_data should be a Hash!"
-        end
-      end
-    end
-
-    autorequire(:service) do
-      'grafana-server'
-    end
+  autorequire(:service) do
+    'grafana-server'
   end
+end
